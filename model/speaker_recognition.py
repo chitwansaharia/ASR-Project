@@ -34,7 +34,7 @@ class SpeakerRecognition(object):
 		num_speakers = self.config.num_speakers
 
 		self.input = tf.placeholder(
-			tf.float32, shape=[batch_size,time_dim,freq_dim,1], name="input")
+			tf.float32, shape=[batch_size,freq_dim,time_dim,1], name="input")
 		self.target = tf.placeholder(
 			tf.int64, shape=[batch_size,num_speakers], name="target")
 		self.keep_prob = tf.placeholder(tf.float32, name="keep_prob")

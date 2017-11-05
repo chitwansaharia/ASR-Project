@@ -25,14 +25,18 @@ class config_container(object):
 
 def speaker_config():
     config = config_container()
-    config.batch_size  = 10
+    config.batch_size  = 40
     config.time_dim = 300
     config.freq_dim = 512
-    config.num_speakers = 1251
+    config.num_speakers = 1164
     config.keep_prob = 0.80
     config.model = "speaker_recognition.SpeakerRecognition"
     config.save_path = "best_save/"
-    config.load_mode = "continue"
+    config.load_mode = "best"
+    config.init_scale = 0.1
+    config.max_grad_norm = 5.0
+    config.learning_rate = 0.001
+    config.patience = 3
     return config
 
 def config():

@@ -1,0 +1,8 @@
+*.pyc
+SAVE_1/
+Log_1/
+train_index
+val_index
+typescript
+*.npy
+index

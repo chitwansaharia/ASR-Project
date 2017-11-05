@@ -16,6 +16,8 @@ import os
 
 import pdb
 
+import gen
+
 
 logger = logging.getLogger(__name__)
 
@@ -23,8 +25,6 @@ class SSFetcher(threading.Thread):
     def __init__(self, parent):
         threading.Thread.__init__(self)
         self.parent = parent
-        self.indices = range(len(self.parent.caption_to_image_dict))
-        np.random.shuffle(self.indices)
 
 
     def run(self):
@@ -32,14 +32,23 @@ class SSFetcher(threading.Thread):
         offset = 0 
         i = 0
         last_batch = False
+        if diter.mode == 'train':
+            limit = 341021//diter.config.batch_size
+        else:
+            limit = 10000//diter.config.batch_size
+        print(limit)
         while not diter.exit_flag:
-            if offset == 1000:
-                offset = 0
+            if offset > limit:
+                diter.exit_flag = True
+                diter.queue.put(None)
+                return
             next_batch = {}
-            next_batch["input"] = diter.data[offset:offset+10,:,:,:]
-            next_label["target"] = diter.label[offset:offset+10,:]
+            temp_batch = next(diter.data)
+            next_batch["input"] = temp_batch[0]
+            next_batch["target"] = temp_batch[1]
+            next_batch["num_batches"] = limit
             diter.queue.put(next_batch)
-            offset += 10
+            offset += 1
             if last_batch:
                 diter.queue.put(None)
                 return
@@ -49,6 +58,7 @@ class SSIterator(object):
                  batch_size,
                  config,
                  seed,
+                 mode = 'train',
                  use_infinite_loop=False,
                  dtype="int32"):
 
@@ -59,11 +69,12 @@ class SSIterator(object):
         self.__dict__.update(args)
         self.load_files()
         self.exit_flag = False
+        self.mode = mode
 
     def load_files(self):
         config = self.config
-        self.data = np.zeros((1000,512,300,1))
-        self.label = np.zeros((1000,1251))
+        self.data = gen.gen(self.mode)
+        
 
     def start(self):
         self.exit_flag = False

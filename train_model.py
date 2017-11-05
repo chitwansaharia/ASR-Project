@@ -8,7 +8,7 @@ import tensorflow as tf
 
 import sys
 import os
-from models import speaker_recognition
+from model import speaker_recognition
 from train_iter import *
 import imp
 import pdb
@@ -55,26 +55,29 @@ def main(_):
             i, patience = 0, 0
             best_valid_metric = 1e10
 
-            while patience < model_config.patience and not eval(FLAGS.eval_only):
+            while patience < model_config.patience:
                 i += 1
 
-                iterator_train = SS_Iterator(model_config.batch_size,model_config,1234)
-                # Initialise the iterator for dev set and train set
-
+                iterator_train = SSIterator(model_config.batch_size,model_config,1234,'train')
+                iterator_valid = SSIterator(model_config.batch_size,model_config,1234,'valid')
+                    # Initialise the iterator for dev set and train set
                 print("\nEpoch: %d" % (i))
                 main_model.run_epoch(session, reader = iterator_train, is_training=True, verbose=True)
 
-                # valid_loss = main_model.run_epoch(session, reader = iterator_valid, verbose=True)
+                valid_loss = main_model.run_epoch(session, reader = iterator_valid, verbose=True)
 
-                # if best_valid_metric > valid_loss:
-                #     best_valid_metric = valid_loss
+                main_model.find_accuracy(session,reader = iterator_valid,verbose=True)
 
-                #     print("\nsaving best model...")
-                #     sv.saver.save(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))
-                #     patience = 0
-                # else:
-                #     patience += 1
-                #     print("\nLosing patience...")
+                if best_valid_metric > valid_loss:
+                    best_valid_metric = valid_loss
+
+                    print("\nsaving best model...")
+                    sv.saver.save(sess=session, save_path=os.path.join(save_path, "best_model.ckpt"))
+                    patience = 0
+                else:
+                    patience += 1
+                    print("\nLosing patience...")
+
 
             if FLAGS.save_path and model_config.load_mode == "fresh":
                 print("\nSaving model to %s." % save_path)
